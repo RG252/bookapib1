@@ -8,7 +8,7 @@ let books=[{
         category: ["fiction","programming","tech","web dev"],
         publication: 1,
     },
-    {
+    { 
         ISBN: "12345TWO",
         title: "Getting started with Python",
         authors: [1,2],
