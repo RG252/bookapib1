@@ -4,12 +4,12 @@ const express=require("express");
 const mongoose = require("mongoose");
 
 //database
-const database = require("./database/index");
+const database = require("./database/index.js");
 
 //Models
-const BookModel = require("./database/book");
-const AuthorModel = require("./database/author");
-const PublicationModel = require("./database/publication");
+const BookModel = require("./database/book.js");
+const AuthorModel = require("./database/author.js");
+const PublicationModel = require("./database/publication.js");
 
 
 //initializing express
@@ -193,27 +193,46 @@ shapeAI.put("/book/update/:isbn", async (req, res) => {
 });
 
 /*
-Route           /book/author/update/:isbn
+Route           /book/author/update
 Description     update/add new author
 Access          Public
 Parameters      isbn
 Method          put
 */
 
-shapeAI.put("/book/author/update/:isbn", (req, res) => {
-    database.books.forEach((book) => {
-        if(book.ISBN === req.params.isbn) 
-        return book.authors.push(req.body.newAuthor);
-    });
+shapeAI.put("/book/author/update/:isbn", async (req, res) => {
 
-    database.authors.forEach((author) => {
-        if(author.id === req.body.newAuthor) 
-        return author.books.push(req.params.isbn);
-    });
+    const updatedBook = await BookModel.findOneAndUpdate(
+        {
+            ISBN: req.params.isbn,
+        },
+        {
+            $addToSet: {
+                authors: req.body.newAuthor,
+            },
+        },
+        {
+            new: true,
+        }
+    );
+
+    const updatedAuthor = await AuthorModel.findOneAndUpdate(
+        {
+            id: req.body.newAuthor,
+        },
+        {
+            $addToSet: {
+                books: req.params.isbn,
+            },
+        },
+        {
+            new: true,
+        }
+    );
 
     return res.json({
-        books: database.books,
-        authors: database.authors,
+        books: updatedBook,
+        authors: updatedAuthor,
         message: "New author was added",
     });
 });
@@ -256,6 +275,9 @@ Method          delete
 */
 
 shapeAI.delete("/book/delete/isbn", (req, res) => {
+
+    
+
     const updatedBookDatabase = database.books.filter(
         (book) => book.ISBN !== req.params.isbn 
     );
