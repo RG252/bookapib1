@@ -144,7 +144,7 @@ Method          post
 */ 
 
 shapeAI.post("/book/new", async (req, res) => {
-    const {newBook} = req.body;
+    const {newBook} = await req.body;
 
     BookModel.create(newBook);
 
@@ -274,16 +274,13 @@ Parameters      isbn
 Method          delete
 */
 
-shapeAI.delete("/book/delete/isbn", (req, res) => {
+shapeAI.delete("/book/delete/:isbn", async (req, res) => {
 
+    const updatedBookDatabase =await BookModel.findOneAndDelete({
+        ISBN: req.params.isbn,
+    });
     
-
-    const updatedBookDatabase = database.books.filter(
-        (book) => book.ISBN !== req.params.isbn 
-    );
-
-    database.books = updatedBookDatabase;
-    return res.json({ books: database.books });
+    return res.json({ books: updatedBookDatabase });
 });
 
 /*
@@ -294,31 +291,37 @@ Parameters      isbn
 Method          delete
 */
 
-shapeAI.delete("/book/delete/author/:isbn/:authorId", (req, res) => {
-    database.books.forEach((book) => {
-        if(book.ISBN === req.params.isbn){
-            const newAuthorList = book.authors.filter(
-                (author) => author !== parseInt(req.params.authorId)
-            );
-            book.authors = newAuthorList;
-            return;
-        }
-    });
+shapeAI.delete("/book/delete/author/:isbn/:authorId", async (req, res) => {
 
-    database.authors.forEach((author) => {
-        if(author.id === parseInt(req.params.authorId)){
-            const newBookList = author.books.filter(
-                (book) => book !== req.params.isbn
-            );
+    const updatedBook = await BookModel.findOneAndUpdate({
+        ISBN: req.params.isbn,
+    },
+    {
+        $pull: {
+            authors: parseInt(req.params.authorId),
+        },
+    },
+    {
+        new: true,
+    }
+    );
 
-            author.books = newBookList;
-            return;
-        }
-    });
+    const updatedAuthor = await AuthorModel.findOneAndUpdate({
+        id: parseInt(req.params.authorId),
+    },
+    {
+        $pull: {
+            books: req.params.isbn,
+        },
+    },
+    {
+        new: true,
+    }
+    );
 
     return res.json({ 
-        book: database.books,
-        author: database.authors,
+        book: updatedBook,
+        author: updatedAuthor,
         message: "author was deleted!!",
     });
 });
