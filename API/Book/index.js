@@ -74,11 +74,15 @@ Method          post
 */ 
 
 Router.post("/new", async (req, res) => {
-    const {newBook} = await req.body;
+    try{
+        const {newBook} = req.body;
 
-    BookModel.create(newBook);
+    await BookModel.create(newBook);
 
     return res.json({ message: "book was added"});
+    } catch(error) {
+        return res.json({ error: error.message });
+    }
 });
 
 /*

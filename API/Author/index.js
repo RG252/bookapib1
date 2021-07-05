@@ -24,17 +24,21 @@ Method          Get
 */ 
 
 Router.get("/:isbn", (req, res) => {
-    const getSpecificAuthors = database.authors.filter(
-        (author) => author.books.includes (req.params.isbn)
-    );
+    try {
+            const getSpecificAuthors = database.authors.filter(
+            (author) => author.books.includes (req.params.isbn)
+        );
 
-    if(getSpecificAuthors.length === 0)    {
-        return res.json({
-            error: `No author found for the Book of ${req.params.isbn}`,
-    });
+        if(getSpecificAuthors.length === 0)    {
+            return res.json({
+                error: `No author found for the Book of ${req.params.isbn}`,
+        });
+        }
+
+        return res.json({ author: getSpecificAuthors});
+    } catch (error) {
+        return res.json({ error: error.message});
     }
-
-    return res.json({ author: getSpecificAuthors});
 });
 
 /*
